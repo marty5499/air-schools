@@ -1,0 +1,20 @@
+{
+  "name": "air-schools",
+  "version": "0.0.0",
+  "authors": [
+    "marty <marty.shu@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "webduino.io",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "google-map": "GoogleWebComponents/google-map#~1.1.7",
+    "polymer": "Polymer/polymer#^1.2.0"
+  }
+}
