@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- Copyright (c) 2015 Google Inc. All rights reserved. -->
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>Google Map demo</title>
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="bower_components/google-map/google-map.html">
+  <link rel="import" href="bower_components/google-map/google-map-marker.html">
+  <style>
+  body {
+    margin: 0;
+    height: 100vh;
+  }
+  #controlsToggle {
+    position: absolute;
+    left: 10%;
+    bottom: 10%;
+  }
+  </style>
+</head>
+
+<body class="fullbleed">
+  <google-map latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom='20'>
+    <google-map-marker id='m' icon="http://www.esa-logistics.eu/admin/viteZe/images/024424000130557407492.png" latitude="22.610884" longitude="120.317659" title="中正高工" draggable="true" mouseEvents="true">
+    </google-map-marker>
+  </google-map>
+
+  <button id="controlsToggle" onclick="toggleControls()">Toggle controls</button>
+
+  <script>
+  var gmap = document.querySelector('google-map');
+  gmap.addEventListener('api-load', function(e) {
+    m.marker.setLabel({
+      text: 'O',
+      color: 'red',
+      fontSize: '42px'
+    });
+    m.marker.addListener('dragend', function(e) {
+      window.q = e;
+      console.log(e.latLng.lat(), e.latLng.lng());
+    });
+
+  });
+
+  function toggleControls() {
+    gmap.disableDefaultUi = !gmap.disableDefaultUi;
+  }
+  </script>
+</body>
+
+</html>
