@@ -5,9 +5,9 @@
 <head>
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <title>Google Map demo</title>
-  <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-  <link rel="import" href="bower_components/google-map/google-map.html">
-  <link rel="import" href="bower_components/google-map/google-map-marker.html">
+  <script src="http://marty5499.github.io/air-schools/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+  <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map.html">
+  <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map-marker.html">
   <style>
   body {
     margin: 0;
@@ -38,7 +38,6 @@
       fontSize: '42px'
     });
     m.marker.addListener('dragend', function(e) {
-      window.q = e;
       console.log(e.latLng.lat(), e.latLng.lng());
     });
 
