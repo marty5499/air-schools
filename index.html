@@ -1,50 +1,131 @@
 <!doctype html>
-<!-- Copyright (c) 2015 Google Inc. All rights reserved. -->
 <html>
 
 <head>
-  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-  <title>Google Map demo</title>
+  <title>HyProto App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="http://marty5499.github.io/air-schools/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
   <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map.html">
   <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map-marker.html">
+
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <script src="https://code.jquery.com/jquery.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
+  <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
   <style>
+  .icon {
+    margin: 10px;
+    width: 64px;
+  }
+  .gmap {
+    height: 100vh;
+  }
+  .state {
+    margin: 0 auto;
+    width: 100%;
+    color: Red;
+  }
+  .ui-content {
+    height: 100vh;
+    padding: 0px;
+  }
   body {
     margin: 0;
     height: 100vh;
   }
-  #controlsToggle {
+  .info {
     position: absolute;
-    left: 10%;
-    bottom: 10%;
+    background-color: #fafafa;
+    padding: 10px;
+    left: 3%;
+    bottom: 23%;
+    font-size: 18px;
   }
   </style>
 </head>
 
-<body class="fullbleed">
-  <google-map latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom='20'>
-    <google-map-marker id='m' icon="http://www.esa-logistics.eu/admin/viteZe/images/024424000130557407492.png" latitude="22.610884" longitude="120.317659" title="中正高工" draggable="true" mouseEvents="true">
-    </google-map-marker>
-  </google-map>
-
-  <button id="controlsToggle" onclick="toggleControls()">Toggle controls</button>
-
+<body>
+  <div id="initPage" data-role="page">
+    <div data-role="header" data-position="fixed">
+      <h1>簡易空汙偵測盒</h1>
+      <a class="ui-btn ui-btn-left" href="#">設定</a>
+      <a class="ui-btn ui-btn-right" href="#">教學</a>
+    </div>
+    <div role="main" class="ui-content">
+      <google-map id='gmap' latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom="19" disableDefaultUi>
+      </google-map>
+      <div class="info">
+        <div>PM 2.5:</div>
+        <div>PM 10:</div>
+      </div>
+    </div>
+    <div data-role="footer" data-position="fixed">
+      <h3>2016 中正高工</h3>
+    </div>
+  </div>
   <script>
-  var gmap = document.querySelector('google-map');
-  gmap.addEventListener('api-load', function(e) {
-    m.marker.setLabel({
-      text: 'O',
-      color: 'red',
-      fontSize: '42px'
-    });
-    m.marker.addListener('dragend', function(e) {
-      console.log(e.latLng.lat(), e.latLng.lng());
-    });
+  var db;
 
+  gmap.addEventListener('google-map-ready', function(e) {
+    db = new Firebase("https://air-schools.firebaseio.com/list");
+    update();
   });
 
   function toggleControls() {
     gmap.disableDefaultUi = !gmap.disableDefaultUi;
+  }
+
+  function addMarker(obj) {
+    var marker = document.createElement('google-map-marker');
+    marker.id = obj.id;
+    updateMarker(marker, obj);
+    Polymer.dom(gmap).appendChild(marker);
+    setTimeout(function() {
+      marker.marker.setLabel({
+        text: '_',
+        color: 'red',
+        fontSize: '24px'
+      });
+      marker.marker.addListener('dragend', function(e) {
+        var data = db.child('devices/' + marker.obj.device);
+        data.update({
+          "lat": e.latLng.lat(),
+          "lng": e.latLng.lng()
+        });
+        console.log(marker.obj.device, e.latLng.lat(), e.latLng.lng());
+      });
+    }, 0);
+  }
+
+  function updateMarker(marker, obj) {
+    marker.obj = obj;
+    marker.latitude = obj.lat;
+    marker.longitude = obj.lng;
+    marker.icon = obj.icon;
+    marker.title = obj.title;
+    marker.draggable = "true";
+    marker.mouseevents = "true";
+  }
+
+  function update() {
+    db.on("value", function(snapshot) {
+      snapshot.forEach(function(data) {
+        var devices = data.val();
+        for (var key in devices) {
+          var ele = document.getElementById(devices[key].id);
+          if (ele === null) {
+            addMarker(devices[key]);
+          } else {
+            updateMarker(ele, devices[key]);
+          }
+        }
+      });
+    }, function(errorObject) {
+      console.log("The read failed: " + errorObject.code);
+    });
   }
   </script>
 </body>
