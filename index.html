@@ -16,17 +16,8 @@
   <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
   <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
   <style>
-  .icon {
-    margin: 10px;
-    width: 64px;
-  }
-  .gmap {
-    height: 100vh;
-  }
-  .state {
-    margin: 0 auto;
-    width: 100%;
-    color: Red;
+  .ui-title {
+    margin: 0em 10% 0em !important;
   }
   .ui-content {
     height: 100vh;
@@ -39,10 +30,10 @@
   .info {
     position: absolute;
     background-color: #fafafa;
-    padding: 10px;
+    padding: 5px;
     left: 3%;
-    bottom: 23%;
-    font-size: 18px;
+    bottom: 10%;
+    font-size: 14px;
   }
   </style>
 </head>
@@ -50,7 +41,7 @@
 <body>
   <div id="initPage" data-role="page">
     <div data-role="header" data-position="fixed">
-      <h1>簡易空汙偵測盒</h1>
+      <h1>校園空氣品質監測</h1>
       <a class="ui-btn ui-btn-left" href="#">設定</a>
       <a class="ui-btn ui-btn-right" href="#">教學</a>
     </div>
@@ -58,16 +49,23 @@
       <google-map id='gmap' latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom="19" disableDefaultUi>
       </google-map>
       <div class="info">
-        <div>PM 2.5:</div>
-        <div>PM 10:</div>
+        <div>時間:
+          <span id="showTime">??/??/?? ??:??:??</span>
+        </div>
+        <div>裝置編號:
+          <span id="showId">----</span>
+        </div>
+        <div>PM 2.5:
+          <span id="showPM25">??</span>μg/m3</div>
+        <div>PM 10:
+          <span id="showPM10">??</span>μg/m3
+        </div>
       </div>
-    </div>
-    <div data-role="footer" data-position="fixed">
-      <h3>2016 中正高工</h3>
     </div>
   </div>
   <script>
-  var db;
+  var db, markerMap = {};
+  var selectMarker;
 
   gmap.addEventListener('google-map-ready', function(e) {
     db = new Firebase("https://air-schools.firebaseio.com/list");
@@ -78,26 +76,50 @@
     gmap.disableDefaultUi = !gmap.disableDefaultUi;
   }
 
-  function addMarker(obj) {
+  function addMarker(key, obj) {
     var marker = document.createElement('google-map-marker');
+    markerMap[key] = marker;
     marker.id = obj.id;
+    marker.key = key;
     updateMarker(marker, obj);
     Polymer.dom(gmap).appendChild(marker);
     setTimeout(function() {
-      marker.marker.setLabel({
-        text: '_',
-        color: 'red',
-        fontSize: '24px'
-      });
       marker.marker.addListener('dragend', function(e) {
-        var data = db.child('devices/' + marker.obj.device);
+        var data = db.child('devices/' + marker.key);
         data.update({
           "lat": e.latLng.lat(),
           "lng": e.latLng.lng()
         });
-        console.log(marker.obj.device, e.latLng.lat(), e.latLng.lng());
+        console.log(marker.key, e.latLng.lat(), e.latLng.lng());
+      });
+      marker.marker.addListener('click', function(e) {
+        updateShowInfo(marker);
+        selectMarker = marker;
+        for (key in markerMap) {
+          markerMap[key].marker.setLabel({
+            text: ' ',
+            color: 'red',
+            fontSize: '32px',
+            top: '100px'
+          });
+        }
+        marker.marker.setLabel({
+          text: '_',
+          color: 'red',
+          fontSize: '32px',
+          top: '100px'
+        });
       });
     }, 0);
+  }
+
+  function updateShowInfo(marker) {
+    if (marker !== null) {
+      showId.innerHTML = marker.key;
+      showTime.innerHTML = marker.obj.time;
+      showPM25.innerHTML = marker.obj.pm25;
+      showPM10.innerHTML = marker.obj.pm10;
+    }
   }
 
   function updateMarker(marker, obj) {
@@ -108,6 +130,9 @@
     marker.title = obj.title;
     marker.draggable = "true";
     marker.mouseevents = "true";
+    if (typeof(selectMarker) !== "undefined" && marker.obj.id === selectMarker.obj.id) {
+      updateShowInfo(marker);
+    }
   }
 
   function update() {
@@ -117,7 +142,7 @@
         for (var key in devices) {
           var ele = document.getElementById(devices[key].id);
           if (ele === null) {
-            addMarker(devices[key]);
+            addMarker(key, devices[key]);
           } else {
             updateMarker(ele, devices[key]);
           }
