@@ -16,8 +16,20 @@
   <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
   <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
   <style>
+  .icon {
+    margin: 10px;
+    width: 64px;
+  }
+  .gmap {
+    height: 100vh;
+  }
+  .state {
+    margin: 0 auto;
+    width: 100%;
+    color: Red;
+  }
   .ui-title {
-    margin: 0em 10% 0em !important;
+    margin: 0.0em 10% 0.0em !important;
   }
   .ui-content {
     height: 100vh;
@@ -46,7 +58,7 @@
       <a class="ui-btn ui-btn-right" href="#">教學</a>
     </div>
     <div role="main" class="ui-content">
-      <google-map id='gmap' latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom="19" disableDefaultUi>
+      <google-map id="gmap" latitude="22.610884" longitude="120.317659" min-zoom="9" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
       </google-map>
       <div class="info">
         <div>時間:
@@ -66,6 +78,7 @@
   <script>
   var db, markerMap = {};
   var selectMarker;
+  var type = window.location.hash.substr(1);
 
   gmap.addEventListener('google-map-ready', function(e) {
     db = new Firebase("https://air-schools.firebaseio.com/list");
@@ -90,7 +103,7 @@
           "lat": e.latLng.lat(),
           "lng": e.latLng.lng()
         });
-        console.log(marker.key, e.latLng.lat(), e.latLng.lng());
+        //console.log(marker.key,e.latLng.lat(), e.latLng.lng());
       });
       marker.marker.addListener('click', function(e) {
         updateShowInfo(marker);
@@ -143,6 +156,9 @@
           var ele = document.getElementById(devices[key].id);
           if (ele === null) {
             addMarker(key, devices[key]);
+            if (key == type) {
+              address(devices[key].address);
+            }
           } else {
             updateMarker(ele, devices[key]);
           }
@@ -151,6 +167,22 @@
     }, function(errorObject) {
       console.log("The read failed: " + errorObject.code);
     });
+  }
+
+  function address(addr) {
+    console.log('address,addr');
+    var self = gmap;
+    new google.maps.Geocoder().geocode({
+        address: addr
+      },
+      function(result, status) {
+        console.log('result', result, status);
+        if (status == google.maps.GeocoderStatus.OK) {
+          self.longitude = result[0].geometry.location.lng();
+          self.latitude = result[0].geometry.location.lat();
+        }
+      }
+    );
   }
   </script>
 </body>
