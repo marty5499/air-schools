@@ -62,6 +62,9 @@
       <google-map latitude="22.630080" longitude="120.343402" id="gmap" min-zoom="3" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
       </google-map>
       <div class="info">
+        <div>地點:
+          <span id="showTitle"></span>
+        </div>
         <div>時間:
           <span id="showTime">??/??/?? ??:??:??</span>
         </div>
@@ -130,6 +133,7 @@
     if (marker !== null) {
       showId.innerHTML = marker.id;
       if (marker.obj.hasOwnProperty('time')) {
+        showTitle.innerHTML = marker.obj.title;
         showTime.innerHTML = marker.obj.time;
         showPM25.innerHTML = marker.obj.pm25;
         showPM10.innerHTML = marker.obj.pm10;
@@ -168,7 +172,6 @@
           var ele = document.getElementById(key);
           var markerObj = devices[key];
           if (ele === null) {
-            console.log('add ele', ele);
             addMarker(key, markerObj);
             //show Marker on the GoogleMap center
             if (key == type) {
