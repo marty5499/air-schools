@@ -58,7 +58,8 @@
       <a class="ui-btn ui-btn-right" href="#">說明</a>
     </div>
     <div role="main" class="ui-content">
-      <google-map id="gmap" min-zoom="9" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
+
+      <google-map latitude="22.630080" longitude="120.343402" id="gmap" min-zoom="3" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
       </google-map>
       <div class="info">
         <div>時間:
@@ -79,7 +80,7 @@
   <script>
   var db, markerMap = {};
   var selectMarker;
-  var type = 'wa2902'; //window.location.hash.substr(1);
+  var type = 'wa2901'; //window.location.hash.substr(1);
 
   gmap.addEventListener('google-map-ready', function(e) {
     db = new Firebase("https://air-schools.firebaseio.com/list");
@@ -128,27 +129,33 @@
   function updateShowInfo(marker) {
     if (marker !== null) {
       showId.innerHTML = marker.id;
-      showTime.innerHTML = marker.obj.time;
-      showPM25.innerHTML = marker.obj.pm25;
-      showPM10.innerHTML = marker.obj.pm10;
+      if (marker.obj.hasOwnProperty('time')) {
+        showTime.innerHTML = marker.obj.time;
+        showPM25.innerHTML = marker.obj.pm25;
+        showPM10.innerHTML = marker.obj.pm10;
+      } else {
+        showTime.innerHTML = "??/??/?? ??:??:??";
+        showPM25.innerHTML = "??";
+        showPM10.innerHTML = "??";
+      }
     }
   }
 
   function updateMarker(marker, obj) {
     marker.obj = obj;
+    marker.icon = obj.icon;
     if (obj.hasOwnProperty('lat')) {
       marker.latitude = obj.lat;
       marker.longitude = obj.lng;
     } else {
-      address(obj.address, marker);
+      address(obj, marker);
     }
-    marker.icon = obj.icon;
     marker.title = obj.title;
-    if (obj.id === type) {
+    if (marker.id === type) {
       marker.draggable = "true";
+      marker.mouseevents = "true";
     }
-    marker.mouseevents = "true";
-    if (typeof(selectMarker) !== "undefined" && marker.obj.id === selectMarker.obj.id) {
+    if (typeof(selectMarker) !== "undefined" && marker.id === selectMarker.id) {
       updateShowInfo(marker);
     }
   }
@@ -158,14 +165,21 @@
       snapshot.forEach(function(data) {
         var devices = data.val();
         for (var key in devices) {
-          var ele = document.getElementById(devices[key].id);
+          var ele = document.getElementById(key);
+          var markerObj = devices[key];
           if (ele === null) {
-            addMarker(key, devices[key]);
+            addMarker(key, markerObj);
+            //show Marker on the GoogleMap center
             if (key == type) {
-              address(devices[key].address, gmap);
+              if (markerObj.hasOwnProperty('lat')) {
+                gmap.latitude = markerObj.lat;
+                gmap.longitude = markerObj.lng;
+              } else {
+                address(markerObj, gmap);
+              }
             }
           } else {
-            updateMarker(ele, devices[key]);
+            updateMarker(ele, markerObj);
           }
         }
       });
@@ -174,14 +188,21 @@
     });
   }
 
-  function address(addr, obj) {
+  function address(markerObj, mapObj) {
     new google.maps.Geocoder().geocode({
-        address: addr
+        address: markerObj.address
       },
       function(result, status) {
         if (status == google.maps.GeocoderStatus.OK) {
-          obj.longitude = result[0].geometry.location.lng();
-          obj.latitude = result[0].geometry.location.lat();
+          mapObj.latitude = result[0].geometry.location.lat();
+          mapObj.longitude = result[0].geometry.location.lng();
+          var data = db.child('devices/' + markerObj.id);
+          data.update({
+            "lat": mapObj.latitude,
+            "lng": mapObj.longitude
+          });
+        } else {
+          console.log('query address error:', status);
         }
       }
     );
