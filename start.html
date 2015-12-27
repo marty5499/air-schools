@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>HyProto App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <script src="https://code.jquery.com/jquery.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
+  <style>
+  .ui-title {
+    margin: 0.0em 10% 0.0em !important;
+  }
+  </style>
+</head>
+
+<body>
+  <div id="initPage" data-role="page">
+
+    <div data-role="header" data-position="fixed" data-theme="b">
+      <h1>校園空氣品質監測</h1>
+    </div>
+    <div role="main" class="ui-content">
+      <div class="ui-field-contain">
+        <label for="k2-penRe7">請輸入學校編號後，點選開啟</label>
+        <input type="text" id="num">
+      </div>
+      <div class="ui-grid-b">
+        <div class="ui-block-a"></div>
+        <div class="ui-block-b">
+          <a id="go" class="ui-btn" href="#" style="background-color:#Fa6868;">開啟</a>
+        </div>
+        <div class="ui-block-c"></div>
+      </div>
+      <br>
+      <img style="width:100%" src="http://marty5499.github.io/air-schools/imgs/number.png">
+    </div>
+  </div>
+  <script>
+  go.addEventListener('click', function() {
+    var val = 2900 + parseInt(num.value);
+    window.location.href = 'http://marty5499.github.io/air-schools/index.html#wa' + val;
+  })
+  </script>
+</body>
+
+</html>
