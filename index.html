@@ -160,7 +160,15 @@
 
   function updateMarker(marker, obj) {
     marker.obj = obj;
-    marker.icon = obj.icon;
+    var iconSize = obj.icon.endsWith("off-line.png") ? 20 : 38;
+    console.log(obj.icon);
+    var image = {
+      url: obj.icon,
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(0, 0),
+      scaledSize: new google.maps.Size(iconSize, iconSize)
+    };
+    marker.icon = image;
     if (obj.hasOwnProperty('lat')) {
       marker.latitude = obj.lat;
       marker.longitude = obj.lng;
