@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--
+http://bin.webduino.io/puru/3/edit?html,js,output
+-->
+<meta name="robots" content="noindex">
+<html>
+
+<head>
+  <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+  <meta charset="utf-8">
+  <title>Webduino Blockly - 繪製溫濕度圖表</title>
+  <script src="http://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
+  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+</head>
+
+<body>
+  <h1>pickup date</h1>
+  <input type="date" id="bday">
+  <br>
+  <br>
+  <div id='msg'></div>
+  <div id="chart_div1" style=" height: 120px; display:inline-block;"></div>
+  <div id="chart_div2" style=" height: 120px;display:inline-block;"></div>
+  <div id="chart_div" style="width: 100%; height: 400px;"></div>
+  <script id="jsbin-javascript">
+  var areachart;
+  var showDate;
+  google.load('visualization', '1.0', {
+    'packages': ['areachart']
+  });
+
+  $('#bday').on('change', function(val) {
+    var t = getTime(val.timeStamp).split(' ')[0].replace(/-/g, '/');
+    showMsg("Reading...");
+    ajax(t);
+  });
+
+  function showMsg(msg) {
+    document.getElementById('msg').innerHTML = msg;
+  }
+
+  function getTime(val) {
+    var q = new Date();
+    q.setTime(val);
+    q = q.toISOString().
+    replace(/T/, ' ').replace(/\..+/, '');
+    return q;
+  }
+
+  function ajax(pmdate) {
+    $.ajax("http://webduino.tw/device/wa2942/date/" + pmdate).done(function(pmdata) {
+      showMsg("");
+      var areachart = {};
+      areachart.origin = [
+        ["Time", "PM2.5", "PM10"]
+      ];
+      //pmdata = pmdata.slice(0,100);
+      google.load("visualization", "1", {
+        packages: ["corechart"],
+        callback: function() {
+          areachart.areachart = true;
+        }
+      });
+
+      function drawAreaChart(d) {
+        var data = google.visualization.arrayToDataTable(d);
+        var options = {
+          title: "",
+          hAxis: {
+            title: "",
+            titleTextStyle: {
+              color: "#333"
+            }
+          },
+          vAxis: {
+            minValue: 0
+          },
+          chartArea: {
+            top: 50,
+            left: 50,
+            width: "80%",
+            height: "70%"
+          },
+          colors: ['#ff0000', '#0000ff']
+        };
+        var code = new google.visualization.AreaChart(document.getElementById("chart_div"));
+        return code.draw(data, options);
+      }
+
+      var pmLength = pmdata.length;
+      var step = pmLength / 100;
+      step = step === 0 ? 1 : parseInt(step);
+      // noprotect
+      for (var i = 0; i < pmLength; i = i + step) {
+        var time = pmdata[i].time.split(' ')[1].split(':');
+        var ts = time[2];
+        var tm = time[1];
+        var th = time[0];
+        var a = [];
+        document.getElementById("chart_div").style.display = "block";
+        document.getElementById("chart_div1").style.display = "none";
+        document.getElementById("chart_div2").style.display = "none";
+        a[0] = th + ":" + tm + ":" + ts;
+        a[1] = pmdata[i].val25;
+        a[2] = pmdata[i].val10;
+        areachart.origin.push(a);
+        drawAreaChart(areachart.origin);
+      }
+    });
+  }
+  </script>
+</body>
+
+</html>
