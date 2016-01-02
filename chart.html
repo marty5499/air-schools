@@ -29,15 +29,23 @@ http://bin.webduino.io/puru/3/edit?html,js,output
   <script id="jsbin-javascript">
   var areachart;
   var showDate;
+  var pickupDate;
+  var hash = location.hash.substring(1).split(',');
+  if (hash.length === 2) {
+    setTimeout(function() {
+      device.value = hash[0];
+      pickupDate = hash[1];
+      ajax(device.value, pickupDate);
+    }, 1000);
+  }
   google.load('visualization', '1.0', {
     'packages': ['areachart']
   });
 
   $('#bday').on('change', function(val) {
     window.q = val;
-    var t = bday.value.replace(/-/g, '/');
-    showMsg("Reading..." + t);
-    ajax(device.value, t);
+    pickupDate = bday.value.replace(/-/g, '/');
+    ajax(device.value, pickupDate);
   });
 
   function showMsg(msg) {
@@ -78,8 +86,9 @@ http://bin.webduino.io/puru/3/edit?html,js,output
   }
 
   function ajax(key, pmdate) {
+    showMsg("讀取中..." + pickupDate);
     $.ajax("http://webduino.tw/device/" + key + "/date/" + pmdate).done(function(pmdata) {
-      showMsg("");
+      showMsg("日期: " + pickupDate);
       var areachart = {};
       areachart.origin = [
         ["Time", "PM2.5", "PM10"]
