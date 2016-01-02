@@ -34,8 +34,9 @@ http://bin.webduino.io/puru/3/edit?html,js,output
   });
 
   $('#bday').on('change', function(val) {
-    var t = getTime(val.timeStamp).split(' ')[0].replace(/-/g, '/');
-    showMsg("Reading...");
+    window.q = val;
+    var t = bday.value.replace(/-/g, '/');
+    showMsg("Reading..." + t);
     ajax(device.value, t);
   });
 
@@ -51,6 +52,31 @@ http://bin.webduino.io/puru/3/edit?html,js,output
     return q;
   }
 
+  function drawAreaChart(d) {
+    var data = google.visualization.arrayToDataTable(d);
+    var options = {
+      title: "",
+      hAxis: {
+        title: "",
+        titleTextStyle: {
+          color: "#333"
+        }
+      },
+      vAxis: {
+        minValue: 0
+      },
+      chartArea: {
+        top: 50,
+        left: 50,
+        width: "80%",
+        height: "70%"
+      },
+      colors: ['#ff0000', '#0000ff']
+    };
+    var code = new google.visualization.AreaChart(document.getElementById("chart_div"));
+    return code.draw(data, options);
+  }
+
   function ajax(key, pmdate) {
     $.ajax("http://webduino.tw/device/" + key + "/date/" + pmdate).done(function(pmdata) {
       showMsg("");
@@ -58,38 +84,12 @@ http://bin.webduino.io/puru/3/edit?html,js,output
       areachart.origin = [
         ["Time", "PM2.5", "PM10"]
       ];
-      //pmdata = pmdata.slice(0,100);
       google.load("visualization", "1", {
         packages: ["corechart"],
         callback: function() {
           areachart.areachart = true;
         }
       });
-
-      function drawAreaChart(d) {
-        var data = google.visualization.arrayToDataTable(d);
-        var options = {
-          title: "",
-          hAxis: {
-            title: "",
-            titleTextStyle: {
-              color: "#333"
-            }
-          },
-          vAxis: {
-            minValue: 0
-          },
-          chartArea: {
-            top: 50,
-            left: 50,
-            width: "80%",
-            height: "70%"
-          },
-          colors: ['#ff0000', '#0000ff']
-        };
-        var code = new google.visualization.AreaChart(document.getElementById("chart_div"));
-        return code.draw(data, options);
-      }
 
       var pmLength = pmdata.length;
       var step = pmLength / 100;
@@ -108,8 +108,8 @@ http://bin.webduino.io/puru/3/edit?html,js,output
         a[1] = pmdata[i].val25;
         a[2] = pmdata[i].val10;
         areachart.origin.push(a);
-        drawAreaChart(areachart.origin);
       }
+      drawAreaChart(areachart.origin);
     });
   }
   </script>
