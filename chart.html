@@ -16,6 +16,8 @@ http://bin.webduino.io/puru/3/edit?html,js,output
 
 <body>
   <h1>pickup date</h1>
+  Device ID:
+  <input id='device' value='wa2942'>
   <input type="date" id="bday">
   <br>
   <br>
@@ -33,7 +35,7 @@ http://bin.webduino.io/puru/3/edit?html,js,output
   $('#bday').on('change', function(val) {
     var t = getTime(val.timeStamp).split(' ')[0].replace(/-/g, '/');
     showMsg("Reading...");
-    ajax(t);
+    ajax(device.value, t);
   });
 
   function showMsg(msg) {
@@ -48,8 +50,8 @@ http://bin.webduino.io/puru/3/edit?html,js,output
     return q;
   }
 
-  function ajax(pmdate) {
-    $.ajax("http://webduino.tw/device/wa2942/date/" + pmdate).done(function(pmdata) {
+  function ajax(key, pmdate) {
+    $.ajax("http://webduino.tw/device/" + key + "/date/" + pmdate).done(function(pmdata) {
       showMsg("");
       var areachart = {};
       areachart.origin = [
