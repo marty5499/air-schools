@@ -99,10 +99,9 @@ http://bin.webduino.io/puru/3/edit?html,js,output
           areachart.areachart = true;
         }
       });
-
       var pmLength = pmdata.length;
-      var step = pmLength / 100;
-      step = step === 0 ? 1 : parseInt(step);
+      var step = parseInt(pmLength / 100);
+      step = step === 0 ? 1 : step;
       // noprotect
       for (var i = 0; i < pmLength; i = i + step) {
         var time = pmdata[i].time.split(' ')[1].split(':');
