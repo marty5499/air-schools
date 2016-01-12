@@ -35,8 +35,7 @@
   .ui-title {
     margin: 0.0em 10% 0.0em !important;
   }
-  .ui-content {
-    height: 100vh;
+  #initPage .ui-content {
     padding: 0px;
   }
   body {
@@ -93,7 +92,7 @@
   var selectMarker;
   var type = window.location.hash.substr(1);
 
-  $(document).on("pagecontainershow", function(){
+  $(document).one("pagecontainershow", function(evt, obj) {
     ScaleContentToDevice();
     
     $(window).on("resize orientationchange", function(){
