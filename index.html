@@ -64,14 +64,10 @@
       <google-map latitude="22.630080" longitude="120.343402" id="gmap" min-zoom="3" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
       </google-map>
       <div class="info">
-        <div>地點:
-          <span id="showTitle"></span>
-        </div>
+        <select id="schools-select" data-mini="true">
+        </select>
         <div>時間:
           <span id="showTime">??/??/?? ??:??:??</span>
-        </div>
-        <div>裝置編號:
-          <span id="showId">----</span>
         </div>
         <div>PM 2.5:
           <span id="showPM25">??</span>μg/m<sup>3</sup>
@@ -89,22 +85,76 @@
     </div>
     <div role="main" class="ui-content">
       <iframe style="width:100%" src="http://taqm.epa.gov.tw/taqm/tw/fpmi.htm" class="help"></iframe>
-
-
     </div>
   </div>
   <script>
-  var db, markerMap = {};
+  var db, markerMap = {}, options = [];
   var selectMarker;
   var type = window.location.hash.substr(1);
+
+  $(document).on("pagecontainershow", function(){
+    ScaleContentToDevice();
+    
+    $(window).on("resize orientationchange", function(){
+      ScaleContentToDevice();
+    })
+  });
 
   gmap.addEventListener('google-map-ready', function(e) {
     db = new Firebase("https://air-schools.firebaseio.com/list");
     update();
   });
 
+  function ScaleContentToDevice() {
+    scroll(0, 0);
+    var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
+    $(".ui-content").height(content);
+  }
+
   function toggleControls() {
     gmap.disableDefaultUi = !gmap.disableDefaultUi;
+  }
+
+  function addOptions(key, obj) {
+    if (obj.title) {
+      options.push('<option value="' + key + '"' + (key === type ? "selected" : "") + '>' + key + ' ' + obj.title + '</option>');
+    }
+    
+    if (options.length === 1) {
+      setTimeout(timer, 0);
+    }
+
+    function timer() {
+      var $select = $('#schools-select');
+      $select.html(options.join(''));
+      $select.selectmenu("refresh", true);
+
+      $select.on('change', function() {
+        var id = $select.children('option:checked')[0].value;
+        var marker = $(gmap).find('#' + id).get(0);
+        updateShowInfo(marker);
+        selectMarker = marker;
+        for (key in markerMap) {
+          markerMap[key].marker.setLabel({
+            text: ' ',
+            color: 'red',
+            fontSize: '32px',
+            top: '100px'
+          });
+        }
+        marker.marker.setLabel({
+          text: '_',
+          color: 'red',
+          fontSize: '32px',
+          top: '100px'
+        });
+        gmap.map.setCenter(marker.marker.getPosition());
+      });
+
+      // show Marker on the GoogleMap center, coming first.
+      $select.trigger('change');
+    }
+
   }
 
   function addMarker(key, obj) {
@@ -113,7 +163,9 @@
     marker.id = obj.id = key;
     updateMarker(marker, obj);
     Polymer.dom(gmap).appendChild(marker);
-    setTimeout(function() {
+    setTimeout(timer, 0);
+
+    function timer() {
       marker.marker.addListener('dragend', function(e) {
         var data = db.child('devices/' + marker.id);
         data.update({
@@ -138,15 +190,18 @@
           fontSize: '32px',
           top: '100px'
         });
+
+        // update select option
+        var $select = $('#schools-select');
+        $select.children('option[value="' + marker.id + '"]').attr('selected', 'selected');
+        $select.selectmenu('refresh');
       });
-    }, 0);
+    }
   }
 
   function updateShowInfo(marker) {
     if (marker !== null) {
-      showId.innerHTML = marker.id;
       if (marker.obj.hasOwnProperty('time')) {
-        showTitle.innerHTML = marker.obj.title;
         var pickupDate = marker.obj.time.split(' ')[0].replace(/-/g, "/");
         var hash = marker.id + "," + pickupDate;
         showTime.innerHTML =
@@ -192,17 +247,17 @@
     db.on("value", function(snapshot) {
       snapshot.forEach(function(data) {
         var devices = data.val();
+        var ele;
+        var markerObj;
+
         for (var key in devices) {
-          var ele = document.getElementById(key);
-          var markerObj = devices[key];
+          ele = document.getElementById(key);
+          markerObj = devices[key];
           if (ele === null) {
+            addOptions(key, markerObj)
             addMarker(key, markerObj);
-            //show Marker on the GoogleMap center
             if (key == type) {
-              if (markerObj.hasOwnProperty('lat')) {
-                gmap.latitude = markerObj.lat;
-                gmap.longitude = markerObj.lng;
-              } else {
+              if (!markerObj.hasOwnProperty('lat')) {
                 address(markerObj, gmap);
               }
             }
@@ -217,23 +272,27 @@
   }
 
   function address(markerObj, mapObj) {
-    new google.maps.Geocoder().geocode({
-        address: markerObj.address
-      },
-      function(result, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-          mapObj.latitude = result[0].geometry.location.lat();
-          mapObj.longitude = result[0].geometry.location.lng();
-          var data = db.child('devices/' + markerObj.id);
-          data.update({
-            "lat": mapObj.latitude,
-            "lng": mapObj.longitude
-          });
-        } else {
-          console.log('query address error:', status);
+    if (markerObj.address) {
+      new google.maps.Geocoder().geocode({
+          address: markerObj.address
+        },
+        function(result, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            mapObj.latitude = result[0].geometry.location.lat();
+            mapObj.longitude = result[0].geometry.location.lng();
+            var data = db.child('devices/' + markerObj.id);
+            data.update({
+              "lat": mapObj.latitude,
+              "lng": mapObj.longitude
+            });
+          } else {
+            console.log('query address error:', status);
+          }
         }
-      }
-    );
+      );
+    } else {
+      console.log('no address: id:', markerObj.id);
+    }
   }
   </script>
 </body>
