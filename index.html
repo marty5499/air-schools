@@ -66,14 +66,8 @@
       <div class="info">
         <select id="schools-select" data-mini="true">
         </select>
-        <div>地點:
-          <span id="showTitle"></span>
-        </div>
         <div>時間:
           <span id="showTime">??/??/?? ??:??:??</span>
-        </div>
-        <div>裝置編號:
-          <span id="showId">----</span>
         </div>
         <div>PM 2.5:
           <span id="showPM25">??</span>μg/m<sup>3</sup>
@@ -207,9 +201,7 @@
 
   function updateShowInfo(marker) {
     if (marker !== null) {
-      showId.innerHTML = marker.id;
       if (marker.obj.hasOwnProperty('time')) {
-        showTitle.innerHTML = marker.obj.title;
         var pickupDate = marker.obj.time.split(' ')[0].replace(/-/g, "/");
         var hash = marker.id + "," + pickupDate;
         showTime.innerHTML =
