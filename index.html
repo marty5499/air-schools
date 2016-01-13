@@ -89,219 +89,395 @@
       <iframe style="width:100%" src="http://taqm.epa.gov.tw/taqm/tw/fpmi.htm" class="help"></iframe>
     </div>
   </div>
+
+  <div id="chartPage" data-role="page">
+    <div data-role="header" data-position="fixed" data-theme="b">
+      <h1>圖表</h1>
+      <a class="ui-btn ui-btn-left ui-corner-all" href="#initPage">返回</a>
+    </div>
+    <div role="main" class="ui-content">
+      <div class="ui-field-contain">
+        <label for="device">裝置編號</label>
+        <!-- <input id='device' value='wa2942'> -->
+        <select id="device"></select>
+      </div>
+      <div class="ui-field-contain">
+        <label for="bday">挑選日期</label>
+        <input type="date" id="bday">
+      </div>
+      <button class="ui-shadow ui-btn ui-corner-all" id="queryData">查詢</button>
+      <p id="msg"></p>
+      <div id="chart_div" style="width: 100%;height: 400px;"></div>
+    </div>
+  </div>
+
   <!-- initPage -->
   <script>
-  var db, markerMap = {}, options = [];
-  var selectMarker;
-  var type = window.location.hash.substr(1);
+  var chartPageInfo = {};
 
-  $(document).one("pagecontainershow", function(evt, obj) {
-    ScaleContentToDevice();
-    
-    $(window).on("resize orientationchange", function(){
-      var activePage = $('body').pagecontainer('getActivePage')[0];
-      if (activePage.id === 'initPage') {
-        ScaleContentToDevice();
-      }
-    })
-  });
-
-  gmap.addEventListener('google-map-ready', function(e) {
-    db = new Firebase("https://air-schools.firebaseio.com/list");
-    update();
-  });
-
-  function ScaleContentToDevice() {
-    scroll(0, 0);
-    var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
-    $("#initPage .ui-content").height(content);
+  function isActivePage(pageId) {
+    var activePage = $('body').pagecontainer('getActivePage')[0];
+    return activePage.id === pageId;
   }
 
-  function toggleControls() {
-    gmap.disableDefaultUi = !gmap.disableDefaultUi;
-  }
+  (function() {
+    "use strict";
 
-  function addOptions(key, obj) {
-    if (obj.title) {
-      options.push('<option value="' + key + '"' + (key === type ? "selected" : "") + '>' + key + ' ' + obj.title + '</option>');
-    }
-    
-    if (options.length === 1) {
-      setTimeout(timer, 0);
-    }
+    var db, markerMap = {}, options = [];
+    var selectMarker;
+    var type = window.location.hash.substr(1);
 
-    function timer() {
-      var $select = $('#schools-select');
-      $select.html(options.join(''));
-      $select.selectmenu("refresh", true);
+    $(document).one("pagecontainershow", function(evt, obj) {
+      var timer;
+      var isResize = false;
 
-      $select.on('change', function() {
-        var id = $select.children('option:checked')[0].value;
-        var marker = $(gmap).find('#' + id).get(0);
-        updateShowInfo(marker);
-        selectMarker = marker;
-        for (key in markerMap) {
-          markerMap[key].marker.setLabel({
-            text: ' ',
-            color: 'red',
-            fontSize: '32px',
-            top: '100px'
-          });
-        }
-        marker.marker.setLabel({
-          text: '_',
-          color: 'red',
-          fontSize: '32px',
-          top: '100px'
-        });
-        gmap.map.setCenter(marker.marker.getPosition());
-      });
-
-      // show Marker on the GoogleMap center, coming first.
-      $select.trigger('change');
-    }
-
-  }
-
-  function addMarker(key, obj) {
-    var marker = document.createElement('google-map-marker');
-    markerMap[key] = marker;
-    marker.id = obj.id = key;
-    updateMarker(marker, obj);
-    Polymer.dom(gmap).appendChild(marker);
-    setTimeout(timer, 0);
-
-    function timer() {
-      marker.marker.addListener('dragend', function(e) {
-        var data = db.child('devices/' + marker.id);
-        data.update({
-          "lat": e.latLng.lat(),
-          "lng": e.latLng.lng()
-        });
-      });
-      marker.marker.addListener('click', function(e) {
-        updateShowInfo(marker);
-        selectMarker = marker;
-        for (key in markerMap) {
-          markerMap[key].marker.setLabel({
-            text: ' ',
-            color: 'red',
-            fontSize: '32px',
-            top: '100px'
-          });
-        }
-        marker.marker.setLabel({
-          text: '_',
-          color: 'red',
-          fontSize: '32px',
-          top: '100px'
-        });
-
-        // update select option
-        var $select = $('#schools-select');
-        $select.children('option[value="' + marker.id + '"]').attr('selected', 'selected');
-        $select.selectmenu('refresh');
-      });
-    }
-  }
-
-  function updateShowInfo(marker) {
-    if (marker !== null) {
-      if (marker.obj.hasOwnProperty('time')) {
-        var pickupDate = marker.obj.time.split(' ')[0].replace(/-/g, "/");
-        var hash = marker.id + "," + pickupDate;
-        showTime.innerHTML =
-          "<a href='chart.html#" + hash + "' target='_self'>" + marker.obj.time + "</a>";
-        showPM25.innerHTML = marker.obj.pm25;
-        showPM10.innerHTML = marker.obj.pm10;
-      } else {
-        showTime.innerHTML = "??/??/?? ??:??:??";
-        showPM25.innerHTML = "??";
-        showPM10.innerHTML = "??";
-      }
-    }
-  }
-
-  function updateMarker(marker, obj) {
-    marker.obj = obj;
-    var iconSize = obj.icon.endsWith("off-line.png") ? 20 : 38;
-    console.log(obj.icon);
-    var image = {
-      url: obj.icon,
-      origin: new google.maps.Point(0, 0),
-      anchor: new google.maps.Point(0, 0),
-      scaledSize: new google.maps.Size(iconSize, iconSize)
-    };
-    marker.icon = image;
-    if (obj.hasOwnProperty('lat')) {
-      marker.latitude = obj.lat;
-      marker.longitude = obj.lng;
-    } else {
-      address(obj, marker);
-    }
-    marker.title = obj.title;
-    if (marker.id === type) {
-      marker.draggable = "true";
-      marker.mouseevents = "true";
-    }
-    if (typeof(selectMarker) !== "undefined" && marker.id === selectMarker.id) {
-      updateShowInfo(marker);
-    }
-  }
-
-  function update() {
-    db.on("value", function(snapshot) {
-      snapshot.forEach(function(data) {
-        var devices = data.val();
-        var ele;
-        var markerObj;
-
-        for (var key in devices) {
-          ele = document.getElementById(key);
-          markerObj = devices[key];
-          if (ele === null) {
-            addOptions(key, markerObj)
-            addMarker(key, markerObj);
-            if (key == type) {
-              if (!markerObj.hasOwnProperty('lat')) {
-                address(markerObj, gmap);
-              }
-            }
-          } else {
-            updateMarker(ele, markerObj);
-          }
-  </script><!-- /initPage -->
+      ScaleContentToDevice();
+      
+      $(window).on("resize orientationchange", function(){
+        if (isActivePage('initPage')) {
+          clearTimeout(timer);
+          timer = setTimeout(ScaleContentToDevice, 300);
+        } else {
+          isResize = true;
         }
       });
-    }, function(errorObject) {
-      console.log("The read failed: " + errorObject.code);
+
+      $('#initPage').on('pageshow', function() {
+        if (isResize) {
+          isResize = false;
+          ScaleContentToDevice();
+          gmap.resize();
+        }
+      });
     });
-  }
 
-  function address(markerObj, mapObj) {
-    if (markerObj.address) {
-      new google.maps.Geocoder().geocode({
-          address: markerObj.address
-        },
-        function(result, status) {
-          if (status == google.maps.GeocoderStatus.OK) {
-            mapObj.latitude = result[0].geometry.location.lat();
-            mapObj.longitude = result[0].geometry.location.lng();
-            var data = db.child('devices/' + markerObj.id);
-            data.update({
-              "lat": mapObj.latitude,
-              "lng": mapObj.longitude
-            });
-          } else {
-            console.log('query address error:', status);
-          }
-        }
-      );
-    } else {
-      console.log('no address: id:', markerObj.id);
+    gmap.addEventListener('google-map-ready', function(e) {
+      db = new Firebase("https://air-schools.firebaseio.com/list");
+      update();
+    });
+
+    function ScaleContentToDevice() {
+      scroll(0, 0);
+      var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
+      $("#initPage .ui-content").height(content);
     }
-  }
-  </script>
+
+    function toggleControls() {
+      gmap.disableDefaultUi = !gmap.disableDefaultUi;
+    }
+
+    function addOptions(key, obj) {
+      if (obj.title) {
+        options.push('<option value="' + key + '"' + (key === type ? "selected" : "") + '>' + key + ' ' + obj.title + '</option>');
+      }
+      
+      if (options.length === 1) {
+        setTimeout(timer, 0);
+      }
+
+      function timer() {
+        var $select = $('#schools-select');
+        $select.html(options.join(''));
+        $select.selectmenu("refresh", true);
+
+        chartPageInfo.deviceOptions = options.join('');
+
+        $select.on('change', function() {
+          var id = $select.find('option:selected').val();
+          var marker = $(gmap).find('#' + id).get(0);
+          updateShowInfo(marker);
+          selectMarker = marker;
+          for (key in markerMap) {
+            markerMap[key].marker.setLabel({
+              text: ' ',
+              color: 'red',
+              fontSize: '32px',
+              top: '100px'
+            });
+          }
+          marker.marker.setLabel({
+            text: '_',
+            color: 'red',
+            fontSize: '32px',
+            top: '100px'
+          });
+          gmap.map.setCenter(marker.marker.getPosition());
+        });
+
+        // show Marker on the GoogleMap center, coming first.
+        $select.trigger('change');
+      }
+    }
+
+    function addMarker(key, obj) {
+      var marker = document.createElement('google-map-marker');
+      markerMap[key] = marker;
+      marker.id = obj.id = key;
+      updateMarker(marker, obj);
+      Polymer.dom(gmap).appendChild(marker);
+      setTimeout(timer, 0);
+
+      function timer() {
+        marker.marker.addListener('dragend', function(e) {
+          var data = db.child('devices/' + marker.id);
+          data.update({
+            "lat": e.latLng.lat(),
+            "lng": e.latLng.lng()
+          });
+        });
+        marker.marker.addListener('click', function(e) {
+          updateShowInfo(marker);
+          selectMarker = marker;
+          for (key in markerMap) {
+            markerMap[key].marker.setLabel({
+              text: ' ',
+              color: 'red',
+              fontSize: '32px',
+              top: '100px'
+            });
+          }
+          marker.marker.setLabel({
+            text: '_',
+            color: 'red',
+            fontSize: '32px',
+            top: '100px'
+          });
+
+          // update select option
+          var $select = $('#schools-select');
+          $select.children('option[value="' + marker.id + '"]').attr('selected', 'selected');
+          $select.selectmenu('refresh');
+        });
+      }
+    }
+
+    function updateShowInfo(marker) {
+      if (marker !== null) {
+        if (marker.obj.hasOwnProperty('time')) {
+          // var pickupDate = marker.obj.time.split(' ')[0].replace(/-/g, "/");
+          // var hash = marker.id + "," + pickupDate;
+          // showTime.innerHTML = "<a href='chart.html#" + hash + "' target='_self'>" + marker.obj.time + "</a>";
+          
+          chartPageInfo.deviceId = marker.id;
+          chartPageInfo.date = marker.obj.time.split(' ')[0];
+
+          showTime.innerHTML = "<a href='#chartPage'>" + marker.obj.time + "</a>";
+          showPM25.innerHTML = marker.obj.pm25;
+          showPM10.innerHTML = marker.obj.pm10;
+        } else {
+          showTime.innerHTML = "??/??/?? ??:??:??";
+          showPM25.innerHTML = "??";
+          showPM10.innerHTML = "??";
+        }
+      }
+    }
+
+    function updateMarker(marker, obj) {
+      marker.obj = obj;
+      var iconSize = obj.icon.endsWith("off-line.png") ? 20 : 38;
+      // console.log(obj.icon);
+      var image = {
+        url: obj.icon,
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(0, 0),
+        scaledSize: new google.maps.Size(iconSize, iconSize)
+      };
+      marker.icon = image;
+      if (obj.hasOwnProperty('lat')) {
+        marker.latitude = obj.lat;
+        marker.longitude = obj.lng;
+      } else {
+        address(obj, marker);
+      }
+      marker.title = obj.title;
+      if (marker.id === type) {
+        marker.draggable = "true";
+        marker.mouseevents = "true";
+      }
+      if (typeof(selectMarker) !== "undefined" && marker.id === selectMarker.id) {
+        updateShowInfo(marker);
+      }
+    }
+
+    function update() {
+      db.on("value", function(snapshot) {
+
+        if (!isActivePage('initPage')) {
+          return;
+        }
+
+        snapshot.forEach(function(data) {
+          var devices = data.val();
+          var ele;
+          var markerObj;
+
+          for (var key in devices) {
+            ele = document.getElementById(key);
+            markerObj = devices[key];
+            if (ele === null) {
+              addOptions(key, markerObj)
+              addMarker(key, markerObj);
+              if (key == type) {
+                if (!markerObj.hasOwnProperty('lat')) {
+                  address(markerObj, gmap);
+                }
+              }
+            } else {
+              updateMarker(ele, markerObj);
+            }
+          }
+        });
+      }, function(errorObject) {
+        console.log("The read failed: " + errorObject.code);
+      });
+    }
+
+    function address(markerObj, mapObj) {
+      if (markerObj.address) {
+        new google.maps.Geocoder().geocode({
+            address: markerObj.address
+          },
+          function(result, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+              mapObj.latitude = result[0].geometry.location.lat();
+              mapObj.longitude = result[0].geometry.location.lng();
+              var data = db.child('devices/' + markerObj.id);
+              data.update({
+                "lat": mapObj.latitude,
+                "lng": mapObj.longitude
+              });
+            } else {
+              console.log('query address error:', status);
+            }
+          }
+        );
+      } else {
+        // console.log('no address: id:', markerObj.id);
+      }
+    }
+  })();
+  </script><!-- /initPage -->
+
+  <!-- chartPage -->
+  <script>
+  (function() {
+    "use strict";
+
+    var pickupDate;
+    var $chartPage = $('#chartPage');
+    var bday = document.getElementById('bday');
+    var device = document.getElementById('device');
+
+    $chartPage.one('pageshow', function() {
+      var timer;
+
+      var $device = $('#device');
+      $device.html(chartPageInfo.deviceOptions);
+      $device.selectmenu("refresh", true);
+
+      $(window).on("resize orientationchange", function() {
+        if (isActivePage('chartPage')) {
+          clearTimeout(timer);
+          timer = setTimeout(function() {
+            ajax(device.value, pickupDate);
+          }, 300);
+        }
+      });
+
+      $('#queryData').on('click', function() {
+        var deviceId = $device.find('option:selected').val();
+
+        if (bday.value) {
+          pickupDate = dateFormateToChart(bday.value);
+          ajax(deviceId, pickupDate);
+        }
+      });
+    });
+
+    $chartPage.on('pageshow', function() {
+      var $device = $('#device');
+      $device.find('option:selected').removeAttr('selected');
+      $device.children('option[value="' + chartPageInfo.deviceId + '"]').attr('selected', 'selected');
+      $device.selectmenu('refresh');
+      bday.value = chartPageInfo.date;
+
+      pickupDate = dateFormateToChart(chartPageInfo.date);
+      ajax(chartPageInfo.deviceId, pickupDate);
+    });
+
+    google.load('visualization', '1.0', {
+      'packages': ['corechart']
+    });
+
+    function dateFormateToChart(val) {
+      return val.replace(/-/g, '/');
+    }
+
+    function showMsg(msg) {
+      document.getElementById('msg').innerHTML = msg;
+    }
+
+    function drawAreaChart(d) {
+
+      if (d.length === 1) {
+        document.getElementById("chart_div").innerHTML = "無資料";
+        return false;
+      }
+
+      var data = google.visualization.arrayToDataTable(d);
+      var options = {
+        legend: {position: 'top', maxLines: 3},
+        title: "",
+        hAxis: {
+          title: "時間",
+          titleTextStyle: {
+            color: "#333"
+          }
+        },
+        vAxis: {
+          minValue: 0
+        },
+        chartArea: {
+          top: 50,
+          left: 50,
+          width: "90%",
+          height: "70%"
+        },
+        colors: ['#ff0000', '#0000ff']
+      };
+      var code = new google.visualization.AreaChart(document.getElementById("chart_div"));
+      return code.draw(data, options);
+    }
+
+    function ajax(key, pmdate) {
+      showMsg("讀取中..." + pickupDate);
+
+      $.ajax("http://webduino.tw/device/" + key + "/date/" + pmdate).done(function(pmdata) {
+        showMsg("日期: " + pickupDate);
+
+        var data = [["Time", "PM2.5", "PM10"]];
+        var pmLength = pmdata.length;
+        var step = parseInt(pmLength / 100);
+        step = step === 0 ? 1 : step;
+        // noprotect
+        for (var i = 0; i < pmLength; i = i + step) {
+          var time = pmdata[i].time.split(' ')[1].split(':');
+          var ts = time[2];
+          var tm = time[1];
+          var th = time[0];
+          var a = [];
+          document.getElementById("chart_div").style.display = "block";
+          a[0] = th + ":" + tm + ":" + ts;
+          a[1] = pmdata[i].val25;
+          a[2] = pmdata[i].val10;
+          data.push(a);
+        }
+
+        drawAreaChart(data);
+      });
+    }
+  })();
+  </script><!-- /chartPage -->
 </body>
 
 </html>
