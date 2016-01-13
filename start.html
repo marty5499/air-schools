@@ -2,14 +2,12 @@
 <html>
 
 <head>
-  <title>HyProto App</title>
+  <title>校園空氣品質監測</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
   <script src="https://code.jquery.com/jquery.min.js"></script>
   <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
-  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
-  <script src="https://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
   <style>
   .ui-title {
     margin: 0.0em 10% 0.0em !important;
@@ -19,7 +17,6 @@
 
 <body>
   <div id="initPage" data-role="page">
-
     <div data-role="header" data-position="fixed" data-theme="b">
       <h1>校園空氣品質監測</h1>
     </div>
@@ -42,7 +39,7 @@
   <script>
   go.addEventListener('click', function() {
     var val = 2900 + parseInt(num.value);
-    window.location.href = 'http://marty5499.github.io/air-schools/index.html#wa' + val;
+    window.location.href = './index.html#wa' + val;
   })
   </script>
 </body>

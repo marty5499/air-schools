@@ -1,63 +1,45 @@
 <!DOCTYPE html>
-<!--
-http://bin.webduino.io/puru/3/edit?html,js,output
--->
-<meta name="robots" content="noindex">
 <html>
 
 <head>
-  <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
+  <meta name="robots" content="noindex">
   <meta charset="utf-8">
-  <title>Webduino Blockly - 繪製溫濕度圖表</title>
-  <script src="http://webduinoio.github.io/webduino-blockly/webduino-blockly.js"></script>
-  <script src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
+  <title>校園空氣品質偵測</title>
+  <script src="https://code.jquery.com/jquery-1.9.1.js"></script>
   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 </head>
 
 <body>
   <h1>校園空氣品質偵測</h1>
-  <h2>請輸入裝置編號、挑選日期</h2>
-  裝置編號:
+  <h2>請輸入裝置編號、挑選日期</h2> 裝置編號:
   <input id='device' value='wa2942'>
   <input type="date" id="bday">
   <br>
   <br>
   <div id='msg'></div>
-  <div id="chart_div1" style=" height: 120px; display:inline-block;"></div>
-  <div id="chart_div2" style=" height: 120px;display:inline-block;"></div>
   <div id="chart_div" style="width: 100%; height: 400px;"></div>
   <script id="jsbin-javascript">
-  var areachart;
-  var showDate;
   var pickupDate;
   var hash = location.hash.substring(1).split(',');
-  if (hash.length === 2) {
-    setTimeout(function() {
+
+  google.load('visualization', '1.0', {'packages': ['corechart']});
+
+  google.setOnLoadCallback(function() {
+    if (hash.length === 2) {
       device.value = hash[0];
       pickupDate = hash[1];
       ajax(device.value, pickupDate);
-    }, 1000);
-  }
-  google.load('visualization', '1.0', {
-    'packages': ['areachart']
-  });
+    }
 
-  $('#bday').on('change', function(val) {
-    window.q = val;
-    pickupDate = bday.value.replace(/-/g, '/');
-    ajax(device.value, pickupDate);
+    $('#bday').on('change', function(val) {
+      window.q = val;
+      pickupDate = bday.value.replace(/-/g, '/');
+      ajax(device.value, pickupDate);
+    });
   });
 
   function showMsg(msg) {
     document.getElementById('msg').innerHTML = msg;
-  }
-
-  function getTime(val) {
-    var q = new Date();
-    q.setTime(val);
-    q = q.toISOString().
-    replace(/T/, ' ').replace(/\..+/, '');
-    return q;
   }
 
   function drawAreaChart(d) {
@@ -65,7 +47,7 @@ http://bin.webduino.io/puru/3/edit?html,js,output
     var options = {
       title: "",
       hAxis: {
-        title: "",
+        title: "時間",
         titleTextStyle: {
           color: "#333"
         }
@@ -89,16 +71,8 @@ http://bin.webduino.io/puru/3/edit?html,js,output
     showMsg("讀取中..." + pickupDate);
     $.ajax("http://webduino.tw/device/" + key + "/date/" + pmdate).done(function(pmdata) {
       showMsg("日期: " + pickupDate);
-      var areachart = {};
-      areachart.origin = [
-        ["Time", "PM2.5", "PM10"]
-      ];
-      google.load("visualization", "1", {
-        packages: ["corechart"],
-        callback: function() {
-          areachart.areachart = true;
-        }
-      });
+
+      var data = [["Time", "PM2.5", "PM10"]];
       var pmLength = pmdata.length;
       var step = parseInt(pmLength / 100);
       step = step === 0 ? 1 : step;
@@ -109,15 +83,13 @@ http://bin.webduino.io/puru/3/edit?html,js,output
         var tm = time[1];
         var th = time[0];
         var a = [];
-        document.getElementById("chart_div").style.display = "block";
-        document.getElementById("chart_div1").style.display = "none";
-        document.getElementById("chart_div2").style.display = "none";
         a[0] = th + ":" + tm + ":" + ts;
         a[1] = pmdata[i].val25;
         a[2] = pmdata[i].val10;
-        areachart.origin.push(a);
+        data.push(a);
       }
-      drawAreaChart(areachart.origin);
+
+      drawAreaChart(data);
     });
   }
   </script>
