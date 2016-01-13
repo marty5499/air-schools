@@ -245,7 +245,7 @@
 
           // update select option
           var $select = $('#schools-select');
-          $select.children('option[value="' + marker.id + '"]').attr('selected', 'selected');
+          $select.val(marker.id);
           $select.selectmenu('refresh');
         });
       }
