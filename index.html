@@ -364,6 +364,7 @@
     "use strict";
 
     var pickupDate;
+    var currentData;
     var $chartPage = $('#chartPage');
     var bday = document.getElementById('bday');
     var device = document.getElementById('device');
@@ -373,32 +374,28 @@
 
       var $device = $('#device');
       $device.html(chartPageInfo.deviceOptions);
-      $device.selectmenu("refresh", true);
+      $device.selectmenu("refresh");
 
       $(window).on("resize orientationchange", function() {
         if (isActivePage('chartPage')) {
           clearTimeout(timer);
           timer = setTimeout(function() {
-            ajax(device.value, pickupDate);
+            drawAreaChart(currentData);
           }, 300);
         }
       });
 
       $('#queryData').on('click', function() {
-        var deviceId = $device.find('option:selected').val();
-
         if (bday.value) {
           pickupDate = dateFormateToChart(bday.value);
-          ajax(deviceId, pickupDate);
+          ajax(device.value, pickupDate);
         }
       });
     });
 
     $chartPage.on('pageshow', function() {
-      var $device = $('#device');
-      $device.find('option:selected').removeAttr('selected');
-      $device.children('option[value="' + chartPageInfo.deviceId + '"]').attr('selected', 'selected');
-      $device.selectmenu('refresh');
+      device.value = chartPageInfo.deviceId;
+      $('#device').selectmenu('refresh');
       bday.value = chartPageInfo.date;
 
       pickupDate = dateFormateToChart(chartPageInfo.date);
@@ -472,6 +469,8 @@
           a[2] = pmdata[i].val10;
           data.push(a);
         }
+
+        currentData = data;
 
         drawAreaChart(data);
       });
