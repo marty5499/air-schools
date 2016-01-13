@@ -96,7 +96,10 @@
     ScaleContentToDevice();
     
     $(window).on("resize orientationchange", function(){
-      ScaleContentToDevice();
+      var activePage = $('body').pagecontainer('getActivePage')[0];
+      if (activePage.id === 'initPage') {
+        ScaleContentToDevice();
+      }
     })
   });
 
@@ -108,7 +111,7 @@
   function ScaleContentToDevice() {
     scroll(0, 0);
     var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
-    $(".ui-content").height(content);
+    $("#initPage .ui-content").height(content);
   }
 
   function toggleControls() {
