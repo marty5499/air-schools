@@ -43,7 +43,7 @@
     height: 100vh;
   }
   .info {
-    position: absolute;
+    position: fixed;
     background-color: #fafafa;
     padding: 5px;
     left: 3%;
@@ -57,7 +57,8 @@
   <div id="initPage" data-role="page">
     <div data-role="header" data-position="fixed" data-theme="b">
       <h1>高雄市校園空氣品質監測</h1>
-      <a class="ui-btn ui-btn-right" href="#helpPage">說明</a>
+      <a class="ui-btn ui-btn-right ui-corner-all" href="#helpPage">說明</a>
+      <!-- <a class="ui-btn ui-btn-left" href="#chartPage">圖表</a> -->
     </div>
     <div role="main" class="ui-content">
 
@@ -70,23 +71,25 @@
           <span id="showTime">??/??/?? ??:??:??</span>
         </div>
         <div>PM 2.5:
-          <span id="showPM25">??</span>μg/m<sup>3</sup>
+          <span id="showPM25">??</span> μg/m<sup>3</sup>
         </div>
         <div>PM 10:
-          <span id="showPM10">??</span>μg/m<sup>3</sup>
+          <span id="showPM10">??</span> μg/m<sup>3</sup>
         </div>
       </div>
     </div>
   </div>
+
   <div id="helpPage" data-role="page">
     <div data-role="header" data-position="fixed" data-theme="b">
       <h1>校園空氣品質監測</h1>
-      <a class="ui-btn ui-btn-left" href="#initPage">返回</a>
+      <a class="ui-btn ui-btn-left ui-corner-all" href="#initPage">返回</a>
     </div>
     <div role="main" class="ui-content">
       <iframe style="width:100%" src="http://taqm.epa.gov.tw/taqm/tw/fpmi.htm" class="help"></iframe>
     </div>
   </div>
+  <!-- initPage -->
   <script>
   var db, markerMap = {}, options = [];
   var selectMarker;
@@ -267,6 +270,7 @@
           } else {
             updateMarker(ele, markerObj);
           }
+  </script><!-- /initPage -->
         }
       });
     }, function(errorObject) {
