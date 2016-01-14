@@ -266,7 +266,7 @@
 
     function updateMarker(marker, obj) {
       marker.obj = obj;
-      var iconSize = obj.icon.endsWith("off-line.png") ? 20 : 38;
+      var iconSize = /\/off-line.png$/.test(obj.icon) ? 20 : 38;
       var image = {
         url: obj.icon,
         origin: new google.maps.Point(0, 0),
