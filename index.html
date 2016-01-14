@@ -98,7 +98,6 @@
     <div role="main" class="ui-content">
       <div class="ui-field-contain">
         <label for="device">裝置編號</label>
-        <!-- <input id='device' value='wa2942'> -->
         <select id="device"></select>
       </div>
       <div class="ui-field-contain">
@@ -124,7 +123,7 @@
 
     var db, markerMap = {}, options = [];
     var selectMarker;
-    var type = window.location.hash.substr(1);
+    var startDeviceId = window.location.hash.substr(1);
 
     $(document).one("pagecontainershow", function(evt, obj) {
       var timer;
@@ -148,6 +147,7 @@
           gmap.resize();
         }
       });
+
     });
 
     gmap.addEventListener('google-map-ready', function(e) {
@@ -161,13 +161,9 @@
       $("#initPage .ui-content").height(content);
     }
 
-    function toggleControls() {
-      gmap.disableDefaultUi = !gmap.disableDefaultUi;
-    }
-
     function addOptions(key, obj) {
       if (obj.title) {
-        options.push('<option value="' + key + '"' + (key === type ? "selected" : "") + '>' + key + ' ' + obj.title + '</option>');
+        options.push('<option value="' + key + '"' + (key === startDeviceId ? "selected" : "") + '>' + key + ' ' + obj.title + '</option>');
       }
       
       if (options.length === 1) {
@@ -182,7 +178,7 @@
         chartPageInfo.deviceOptions = options.join('');
 
         $select.on('change', function() {
-          var id = $select.find('option:selected').val();
+          var id = $select.get(0).value;
           var marker = $(gmap).find('#' + id).get(0);
           updateShowInfo(marker);
           selectMarker = marker;
@@ -252,12 +248,8 @@
     }
 
     function updateShowInfo(marker) {
-      if (marker !== null) {
+      if (marker !== null && marker.obj) {
         if (marker.obj.hasOwnProperty('time')) {
-          // var pickupDate = marker.obj.time.split(' ')[0].replace(/-/g, "/");
-          // var hash = marker.id + "," + pickupDate;
-          // showTime.innerHTML = "<a href='chart.html#" + hash + "' target='_self'>" + marker.obj.time + "</a>";
-          
           chartPageInfo.deviceId = marker.id;
           chartPageInfo.date = marker.obj.time.split(' ')[0];
 
@@ -275,7 +267,6 @@
     function updateMarker(marker, obj) {
       marker.obj = obj;
       var iconSize = obj.icon.endsWith("off-line.png") ? 20 : 38;
-      // console.log(obj.icon);
       var image = {
         url: obj.icon,
         origin: new google.maps.Point(0, 0),
@@ -290,7 +281,7 @@
         address(obj, marker);
       }
       marker.title = obj.title;
-      if (marker.id === type) {
+      if (marker.id === startDeviceId) {
         marker.draggable = "true";
         marker.mouseevents = "true";
       }
@@ -317,7 +308,7 @@
             if (ele === null) {
               addOptions(key, markerObj)
               addMarker(key, markerObj);
-              if (key == type) {
+              if (key == startDeviceId) {
                 if (!markerObj.hasOwnProperty('lat')) {
                   address(markerObj, gmap);
                 }
