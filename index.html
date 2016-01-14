@@ -105,7 +105,6 @@
         <label for="bday">挑選日期</label>
         <input type="date" id="bday">
       </div>
-      <button class="ui-shadow ui-btn ui-corner-all" id="queryData">查詢</button>
       <p id="msg"></p>
       <div id="chart_div" style="width: 100%;height: 400px;"></div>
     </div>
@@ -386,8 +385,8 @@
         }
       });
 
-      $('#queryData').on('click', function() {
-        if (bday.value) {
+      $('#bday, #device').on('change', function () {
+        if (bday.value && device.value) {
           pickupDate = dateFormateToChart(bday.value);
           ajax(device.value, pickupDate);
         }
