@@ -248,7 +248,7 @@
     }
 
     function updateShowInfo(marker) {
-      if (marker !== null && marker.obj) {
+      if (marker && marker.obj) {
         if (marker.obj.hasOwnProperty('time')) {
           chartPageInfo.deviceId = marker.id;
           chartPageInfo.date = marker.obj.time.split(' ')[0];
