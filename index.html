@@ -160,8 +160,8 @@
     var startDeviceId = window.location.hash.substr(1);
 
     $(document).one("pagecontainershow", function(evt, obj) {
+      var isResize = !isActivePage('initPage');
       var timer;
-      var isResize = false;
 
       ScaleContentToDevice();
       
@@ -419,12 +419,14 @@
     });
 
     $chartPage.on('pageshow', function() {
-      device.value = chartPageInfo.deviceId;
-      $('#device').selectmenu('refresh');
-      bday.value = chartPageInfo.date;
+      if (chartPageInfo && chartPageInfo.deviceId && chartPageInfo.date) {
+        device.value = chartPageInfo.deviceId;
+        $('#device').selectmenu('refresh');
+        bday.value = chartPageInfo.date;
 
-      pickupDate = dateFormateToChart(chartPageInfo.date);
-      ajax(chartPageInfo.deviceId, pickupDate);
+        pickupDate = dateFormateToChart(chartPageInfo.date);
+        ajax(chartPageInfo.deviceId, pickupDate);
+      }
     });
 
     google.load('visualization', '1.0', {
