@@ -57,8 +57,7 @@
   <div id="initPage" data-role="page">
     <div data-role="header" data-position="fixed" data-theme="b">
       <h1>高雄市校園空氣品質監測</h1>
-      <a class="ui-btn ui-btn-right ui-corner-all" href="#helpPage">說明</a>
-      <!-- <a class="ui-btn ui-btn-left" href="#chartPage">圖表</a> -->
+      <a href="#popupDesc" data-rel="popup" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-icon-bars ui-btn-icon-left ui-btn-right">說明</a>
     </div>
     <div role="main" class="ui-content">
 
@@ -78,6 +77,14 @@
         </div>
       </div>
     </div>
+
+    <div data-role="popup" id="popupDesc" data-theme="b">
+      <ul data-role="listview" data-inset="true" style="min-width:210px;">
+        <li data-role="list-divider">說明</li>
+        <li><a href="#helpPage">PM 2.5</a></li>
+        <li><a href="#apiPage">資料取得</a></li>
+      </ul>
+    </div>
   </div>
 
   <div id="helpPage" data-role="page">
@@ -87,6 +94,33 @@
     </div>
     <div role="main" class="ui-content">
       <iframe style="width:100%" src="http://taqm.epa.gov.tw/taqm/tw/fpmi.htm" class="help"></iframe>
+    </div>
+  </div>
+
+  <div id="apiPage" data-role="page">
+    <div data-role="header" data-position="fixed" data-theme="b">
+      <h1>資料取得</h1>
+      <a class="ui-btn ui-btn-left ui-corner-all" href="#initPage">返回</a>
+    </div>
+    <div role="main" class="ui-content">
+      <p>
+        <b>紅色部份視需要，做替換，像是日期、device id。</b>
+      </p>
+      <p>
+        取得最新一筆資料<br>
+        ==============<br>
+        http://air.webduino.tw/device/<b style="color:red">wa2941</b>/last
+      </p>
+      <p>
+        取得今天的資料<br>
+        ============<br>
+        http://air.webduino.tw/device/<b style="color:red">wa2941</b>/today
+      </p>
+      <p>
+        取得指定日期的資料<br>
+        ================<br>
+        http://air.webduino.tw/device/<b style="color:red">wa2941</b>/date/<b style="color:red">2016/01/02</b>
+      </p>
     </div>
   </div>
 
