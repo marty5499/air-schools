@@ -41,6 +41,12 @@
   #apiPage .ui-content {
     word-wrap: break-word;
   }
+  #listPage img {
+    width: 28px;
+  }
+  #listPage .ui-table-columntoggle-btn {
+    display: none;
+  }
   body {
     margin: 0;
     height: 100vh;
@@ -63,7 +69,6 @@
       <a href="#popupDesc" data-rel="popup" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-icon-bars ui-btn-icon-left ui-btn-right">說明</a>
     </div>
     <div role="main" class="ui-content">
-
       <google-map latitude="22.630080" longitude="120.343402" id="gmap" min-zoom="3" max-zoom="20" language="zh_tw" zoom="17" disabledefaultui="">
       </google-map>
       <div class="info">
@@ -78,6 +83,18 @@
         <div>PM 1.0:
           <span id="showPM10">??</span> μg/m<sup>3</sup>
         </div>
+      </div>
+    </div>
+    <div data-position="fixed" data-role="footer">
+      <div data-role="navbar" data-iconpos="top">
+        <ul>
+          <li>
+            <a data-icon="location" class="ui-btn-active ui-state-persist">地圖</a>
+          </li>
+          <li>
+            <a data-icon="bullets" href="#listPage">列表</a>
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -152,9 +169,47 @@
     </div>
   </div>
 
+  <div id="listPage" data-role="page">
+    <div data-role="header" data-position="fixed" data-theme="b">
+      <h1>列表</h1>
+    </div>
+    <div role="main" class="ui-content">
+      <form class="ui-filterable">
+        <input id="filterTable-input" data-type="search" placeholder="過濾...例: on/off: 裝置上線/離線">
+      </form>
+      <table data-role="table" data-mode="columntoggle" data-filter="true" data-input="#filterTable-input"
+        class="ui-responsive ui-shadow" id="listTable">
+        <thead>
+          <tr>
+            <th data-priority="1">裝置</th>
+            <th data-priority="2">學校</th>
+            <th data-priority="1">狀態</th>
+            <th data-priority="2">PM 2.5</th>
+            <th data-priority="3">PM 1.0</th>
+            <th data-priority="3">時間</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div data-position="fixed" data-role="footer">
+      <div data-role="navbar" data-iconpos="top">
+        <ul>
+          <li>
+            <a data-icon="location" href="#initPage">地圖</a>
+          </li>
+          <li>
+            <a data-icon="bullets" class="ui-btn-active ui-state-persist">列表</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   <!-- initPage -->
   <script>
   var chartPageInfo = {};
+  var db;
 
   function isActivePage(pageId) {
     var activePage = $('body').pagecontainer('getActivePage')[0];
@@ -164,7 +219,7 @@
   (function() {
     "use strict";
 
-    var db, markerMap = {}, options = [];
+    var markerMap = {}, options = [];
     var selectMarker;
     var startDeviceId = window.location.hash.substr(1);
 
@@ -513,6 +568,128 @@
     }
   })();
   </script><!-- /chartPage -->
+  
+  <!-- listPage -->
+  <script>
+  (function() {
+    "use strict";
+
+    var $listPage = $('#listPage');
+    var $table = $('#listTable');
+    var oldhtml;
+    var oldD;
+
+    $listPage.one('pageshow', function() {
+      update();
+    });
+    
+    function update() {
+      db.on("value", function(snapshot) {
+
+        if (!isActivePage('listPage')) {
+          return;
+        }
+
+        snapshot.forEach(function(data) {
+          var devices = data.val();
+          var obj;
+          var datas = {};
+          var data;
+
+          for (var key in devices) {
+            obj = devices[key];
+
+            if (obj.title) {
+              data = [key, obj.title, obj.icon, obj.pm25, obj.pm10, obj.time];
+              datas[key] = data;
+            }
+          }
+
+          updateTable(datas);
+        });
+      }, function(errorObject) {
+        console.log("The read failed: " + errorObject.code);
+      });
+    }
+
+    function updateTable(datas) {
+      var html = [];
+      var diff;
+
+      if (!$table.data('init')) {
+        $table.data('init', true);
+
+        $.each(datas, function(key, data) {
+          html.push('<tr>');
+          $.each(data, function(idx, val) {
+            if (idx === 2) {
+              val = '<img src="' + val + '">' + '<span style="display:none">'+ val +'</span>';
+            }
+            html.push('<td>', val, '</td>');
+          });
+          html.push('</tr>');
+        });
+        
+        $table.find('tbody').html(html.join(''));
+        $table.table('rebuild');
+
+        oldD = datas;
+      } else {
+        // find datas that need to update.
+        diff = checkData(oldD, datas);
+
+        // update cells
+        // find all tds and check the text.
+        $.each(diff, function(key, val) {
+          var tds = $table.find('tbody td:contains("' + key + '")').parent().children();
+
+          $.each(val, function(idx, value) {
+            var text;
+            var td;
+
+            if (idx < 2) return;
+
+            if (idx === 2) {
+              td = tds.eq(idx).find('img')[0];
+              text = td.src;
+
+              if (text !== value) {
+                td.src = value;
+                $(td).next().text(value);
+              }
+            } else {
+              td = tds.eq(idx);
+              
+              if (td.text() !== value) {
+                td.text(value);
+              }
+            }
+
+          });
+        });
+      }
+    }
+
+    function checkData(old, now) {
+      var diff = {};
+
+      $.each(now, function(key, val) {
+        var odata = old[key].slice(2, old[key].length - 1);
+        var vdata = val.slice(2, val.length - 1);
+
+        $.each(vdata, function(idx, value) {
+          if (value !== odata[idx]) {
+            diff[key] = val;
+            return false;
+          }
+        });
+      });
+
+      return diff;
+    };
+
+  })();
+  </script><!-- /listPage -->
 </body>
 
 </html>
