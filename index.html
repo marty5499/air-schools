@@ -257,7 +257,18 @@
       scroll(0, 0);
       var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
       $("#initPage .ui-content").height(content);
+      gmap.resize();
+      calInfoPostion();
     }
+
+    function calInfoPostion() {
+      var $info = $('#initPage .info');
+      var $footer = $('#initPage .ui-footer');
+
+      if (parseInt($info.css('bottom').replace('px', '')) < $footer.outerHeight()) {
+        $info.css('bottom', $footer.outerHeight() + 5);
+      }
+    };
 
     function addOptions(key, obj) {
       if (obj.title) {
