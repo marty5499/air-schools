@@ -219,6 +219,7 @@
   (function() {
     "use strict";
 
+    var mapReady = false;
     var markerMap = {}, options = [];
     var selectMarker;
     var startDeviceId = window.location.hash.substr(1);
@@ -249,6 +250,7 @@
     });
 
     gmap.addEventListener('google-map-ready', function(e) {
+      mapReady = true;
       db = new Firebase("https://air-schools.firebaseio.com/list");
       update();
     });
@@ -257,8 +259,10 @@
       scroll(0, 0);
       var content = $.mobile.getScreenHeight() - $(".ui-header").outerHeight() - $(".ui-footer").outerHeight() - $(".ui-content").outerHeight() + $(".ui-content").height();
       $("#initPage .ui-content").height(content);
-      gmap.resize();
-      calInfoPostion();
+      if (mapReady) {
+        gmap.resize();
+        calInfoPostion();
+      }
     }
 
     function calInfoPostion() {
