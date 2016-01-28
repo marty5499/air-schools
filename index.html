@@ -216,13 +216,26 @@
     return activePage.id === pageId;
   }
 
+  function getSearchObj() {
+    var oGetVars = {};
+
+    if (window.location.search.length > 1) {
+      for (var aItKey, nKeyId = 0, aCouples = window.location.search.substr(1).split("&"); nKeyId < aCouples.length; nKeyId++) {
+        aItKey = aCouples[nKeyId].split("=");
+        oGetVars[unescape(aItKey[0])] = aItKey.length > 1 ? unescape(aItKey[1]) : "";
+      }
+    }
+
+    return oGetVars;
+  }
+
   (function() {
     "use strict";
 
     var mapReady = false;
     var markerMap = {}, options = [];
     var selectMarker;
-    var startDeviceId = window.location.hash.substr(1);
+    var startDeviceId = getSearchObj()['deviceid'];
 
     $(document).one("pagecontainershow", function(evt, obj) {
       var isResize = !isActivePage('initPage');
