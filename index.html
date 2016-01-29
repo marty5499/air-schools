@@ -235,7 +235,11 @@
 
     if (re.test(location.hash)) {
       deviceid = re.exec(location.hash)[1];
-      window.location = './index.html?deviceid=' + deviceid;
+      if (history.replaceState) {
+        history.replaceState(null, null, '?deviceid=' + deviceid);
+      } else {
+        window.location = './index.html?deviceid=' + deviceid;
+      }
     }
   };
 
