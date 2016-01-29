@@ -229,6 +229,16 @@
     return oGetVars;
   }
 
+  function transOldHash() {
+    var re = /^#(wa\d{4})$/;
+    var deviceId;
+
+    if (re.test(location.hash)) {
+      deviceid = re.exec(location.hash)[1];
+      window.location = './index.html?deviceid=' + deviceid;
+    }
+  };
+
   (function() {
     "use strict";
 
@@ -236,6 +246,9 @@
     var markerMap = {}, options = [];
     var selectMarker;
     var startDeviceId = getSearchObj()['deviceid'];
+
+    // 相容舊的網址
+    transOldHash();
 
     $(document).one("pagecontainershow", function(evt, obj) {
       var isResize = !isActivePage('initPage');
