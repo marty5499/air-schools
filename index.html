@@ -5,6 +5,19 @@
   <title>校園空氣品質監測</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script type="text/javascript">
+    (function() {
+      var re = /^#(wa\d{4})$/;
+      var deviceId;
+
+      if (re.test(location.hash)) {
+        deviceid = re.exec(location.hash)[1];
+        window.location = './index.html?deviceid=' + deviceid;
+      }
+    })();
+  </script>
+
   <script src="http://marty5499.github.io/air-schools/bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
   <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map.html">
   <link rel="import" href="http://marty5499.github.io/air-schools/bower_components/google-map/google-map-marker.html">
@@ -15,6 +28,7 @@
   <script type="text/javascript" src="https://webduino.io/components/webduino-js/dist/webduino-all.min.js"></script>
   <script type="text/javascript" src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
   <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
 
   <style>
   .icon {
@@ -229,20 +243,6 @@
     return oGetVars;
   }
 
-  function transOldHash() {
-    var re = /^#(wa\d{4})$/;
-    var deviceId;
-
-    if (re.test(location.hash)) {
-      deviceid = re.exec(location.hash)[1];
-      if (history.replaceState) {
-        history.replaceState(null, null, '?deviceid=' + deviceid);
-      } else {
-        window.location = './index.html?deviceid=' + deviceid;
-      }
-    }
-  };
-
   (function() {
     "use strict";
 
@@ -250,9 +250,6 @@
     var markerMap = {}, options = [];
     var selectMarker;
     var startDeviceId = getSearchObj()['deviceid'];
-
-    // 相容舊的網址
-    transOldHash();
 
     $(document).one("pagecontainershow", function(evt, obj) {
       var isResize = !isActivePage('initPage');
